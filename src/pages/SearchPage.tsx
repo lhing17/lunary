@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Search, Filter, Clock, FileText, X } from 'lucide-react';
-import { SearchResult, SearchResponse, SearchFilters } from '../types';
+import { Search, Filter, Clock } from 'lucide-react';
+import { SearchResult, SearchFilters } from '../types';
 import { SearchResults } from '../components/SearchResults';
 import { SearchFiltersComponent } from '../components/SearchFilters';
 import { SearchHistory } from '../components/SearchHistory';

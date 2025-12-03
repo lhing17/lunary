@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Trash2, Folder, Clock, CheckCircle, AlertCircle, Pause, Play } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, Folder, Clock, CheckCircle, Pause, Play } from 'lucide-react';
 import { DirectoryConfig, IndexStatus } from '../types';
 import { useI18n } from '../i18n';
 
