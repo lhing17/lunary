@@ -4,8 +4,10 @@ import { SearchResult, SearchResponse, SearchFilters } from '../types';
 import { SearchResults } from '../components/SearchResults';
 import { SearchFiltersComponent } from '../components/SearchFilters';
 import { SearchHistory } from '../components/SearchHistory';
+import { useI18n } from '../i18n';
 
 export const SearchPage: React.FC = () => {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -81,7 +83,7 @@ export const SearchPage: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            全文搜索
+            {t('pages.searchPage.title')}
           </h1>
           
           {/* Search Input */}
@@ -93,7 +95,7 @@ export const SearchPage: React.FC = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="输入搜索关键词..."
+              placeholder={t('pages.searchPage.placeholder')}
               className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -121,7 +123,7 @@ export const SearchPage: React.FC = () => {
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                     <Clock className="w-4 h-4 mr-2" />
-                    搜索历史
+                    {t('pages.searchPage.history')}
                   </h3>
                   <SearchHistory
                     history={searchHistory}
@@ -132,7 +134,7 @@ export const SearchPage: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
-                    筛选条件
+                    {t('pages.searchPage.filters')}
                   </h3>
                   <SearchFiltersComponent
                     filters={filters}
@@ -153,11 +155,9 @@ export const SearchPage: React.FC = () => {
                 <div className="mb-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                   <div>
                     {isSearching ? (
-                      <span>搜索中...</span>
+                      <span>{t('pages.searchPage.searching')}</span>
                     ) : (
-                      <span>
-                        找到 {totalResults} 个结果，用时 {searchTime} 秒
-                      </span>
+                      <span>{t('pages.searchPage.stats', { count: totalResults, time: searchTime })}</span>
                     )}
                   </div>
                 </div>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Save, RotateCcw, Palette, Search, Database, Globe } from 'lucide-react';
 import { AppSettings } from '../types';
+import { useI18n } from '../i18n';
 
 export const SettingsPage: React.FC = () => {
+  const { t, lang, setLang, locale } = useI18n();
   const [settings, setSettings] = useState<AppSettings>({
     search: {
       resultsPerPage: 20,
@@ -64,7 +66,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleAddExcludePattern = () => {
-    const newPattern = prompt('输入要排除的文件模式 (例如: *.tmp):');
+    const newPattern = prompt(t('pages.settings.promptExclude'));
     if (newPattern && !settings.indexing.excludePatterns.includes(newPattern)) {
       handleSettingChange('indexing', 'excludePatterns', [
         ...settings.indexing.excludePatterns,
@@ -86,12 +88,8 @@ export const SettingsPage: React.FC = () => {
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            设置
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            配置搜索、索引和界面选项
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('pages.settings.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('pages.settings.subtitle')}</p>
         </div>
 
         {/* Settings Sections */}
@@ -100,16 +98,12 @@ export const SettingsPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center mb-4">
               <Search className="w-5 h-5 text-primary-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                搜索设置
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('pages.settings.search')}</h2>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  每页结果数
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.resultsPerPage')}</label>
                 <input
                   type="number"
                   min="5"
@@ -121,9 +115,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  匹配精度
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.matchPrecision')}</label>
                 <input
                   type="range"
                   min="0.1"
@@ -145,9 +137,7 @@ export const SettingsPage: React.FC = () => {
                   onChange={(e) => handleSettingChange('search', 'enableHighlighting', e.target.checked)}
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  启用搜索结果高亮显示
-                </span>
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('pages.settings.enableHighlight')}</span>
               </label>
             </div>
           </div>
@@ -156,9 +146,7 @@ export const SettingsPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center mb-4">
               <Database className="w-5 h-5 text-primary-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                索引设置
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('pages.settings.indexing')}</h2>
             </div>
             
             <div className="space-y-4">
@@ -169,15 +157,11 @@ export const SettingsPage: React.FC = () => {
                   onChange={(e) => handleSettingChange('indexing', 'autoUpdate', e.target.checked)}
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  启用自动更新索引
-                </span>
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('pages.settings.autoUpdate')}</span>
               </label>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  更新间隔 (秒)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.updateInterval')}</label>
                 <input
                   type="number"
                   min="300"
@@ -187,15 +171,11 @@ export const SettingsPage: React.FC = () => {
                   disabled={!settings.indexing.autoUpdate}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
                 />
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  建议设置为 3600 秒 (1小时)
-                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('pages.settings.intervalHint')}</div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  最大文件大小 (MB)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.maxFileSize')}</label>
                 <input
                   type="number"
                   min="1"
@@ -207,9 +187,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  排除文件模式
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.excludePatterns')}</label>
                 <div className="space-y-2">
                   {settings.indexing.excludePatterns.map((pattern, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -220,7 +198,7 @@ export const SettingsPage: React.FC = () => {
                         onClick={() => handleRemoveExcludePattern(pattern)}
                         className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                       >
-                        删除
+                        {t('pages.settings.delete')}
                       </button>
                     </div>
                   ))}
@@ -228,7 +206,7 @@ export const SettingsPage: React.FC = () => {
                     onClick={handleAddExcludePattern}
                     className="w-full px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
-                    添加排除模式
+                    {t('pages.settings.addExclude')}
                   </button>
                 </div>
               </div>
@@ -239,34 +217,31 @@ export const SettingsPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center mb-4">
               <Palette className="w-5 h-5 text-primary-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                界面设置
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('pages.settings.ui')}</h2>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  主题
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.theme')}</label>
                 <select
                   value={settings.ui.theme}
                   onChange={(e) => handleSettingChange('ui', 'theme', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="system">跟随系统</option>
-                  <option value="light">浅色</option>
-                  <option value="dark">深色</option>
+                  <option value="system">{t('pages.settings.themeSystem')}</option>
+                  <option value="light">{t('pages.settings.themeLight')}</option>
+                  <option value="dark">{t('pages.settings.themeDark')}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  语言
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('pages.settings.language')}</label>
                 <select
-                  value={settings.ui.language}
-                  onChange={(e) => handleSettingChange('ui', 'language', e.target.value)}
+                  value={lang}
+                  onChange={(e) => {
+                    handleSettingChange('ui', 'language', e.target.value);
+                    setLang(e.target.value as any);
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="zh-CN">简体中文</option>
@@ -281,9 +256,7 @@ export const SettingsPage: React.FC = () => {
                   onChange={(e) => handleSettingChange('ui', 'showThumbnails', e.target.checked)}
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  显示文件缩略图
-                </span>
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('pages.settings.showThumbnails')}</span>
               </label>
             </div>
           </div>
@@ -296,7 +269,7 @@ export const SettingsPage: React.FC = () => {
             className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <RotateCcw className="w-4 h-4 inline mr-2" />
-            重置为默认值
+            {t('pages.settings.reset')}
           </button>
           
           <button
@@ -305,30 +278,28 @@ export const SettingsPage: React.FC = () => {
             className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Save className="w-4 h-4 inline mr-2" />
-            保存设置
+            {t('pages.settings.save')}
           </button>
         </div>
 
         {/* About Section */}
         <div className="mt-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            关于
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('pages.settings.about')}</h2>
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex justify-between">
-              <span>应用名称:</span>
-              <span>全文检索工具</span>
+              <span>{t('pages.settings.appNameLabel')}</span>
+              <span>{t('pages.settings.appName')}</span>
             </div>
             <div className="flex justify-between">
-              <span>版本:</span>
+              <span>{t('pages.settings.versionLabel')}</span>
               <span>0.1.0</span>
             </div>
             <div className="flex justify-between">
-              <span>构建时间:</span>
-              <span>{new Date().toLocaleDateString('zh-CN')}</span>
+              <span>{t('pages.settings.buildTimeLabel')}</span>
+              <span>{new Date().toLocaleDateString(locale)}</span>
             </div>
             <div className="flex justify-between">
-              <span>开源协议:</span>
+              <span>{t('pages.settings.licenseLabel')}</span>
               <span>MIT License</span>
             </div>
           </div>

@@ -70,7 +70,7 @@ src-tauri/
 ### 环境准备
 
 - 安装 Node.js 18+ 与 npm / pnpm / yarn
-- 安装 Rust（`rustup`）与 Tauri 必要依赖（各平台见 https://tauri.app/）
+- 安装 Rust（`rustup`）与 Tauri 必要依赖（各平台见 https://tauri.app/ ）
 
 ### 安装依赖
 

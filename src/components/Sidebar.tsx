@@ -1,22 +1,22 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Database, Settings } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const { t } = useI18n();
 
   const menuItems = [
-    { path: '/', icon: Search, label: '搜索' },
-    { path: '/index-management', icon: Database, label: '索引管理' },
-    { path: '/settings', icon: Settings, label: '设置' },
+    { path: '/', icon: Search, label: t('components.sidebar.menu.search') },
+    { path: '/index-management', icon: Database, label: t('components.sidebar.menu.index') },
+    { path: '/settings', icon: Settings, label: t('components.sidebar.menu.settings') },
   ];
 
   return (
     <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <div className="p-6">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          全文检索工具
-        </h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('components.sidebar.title')}</h1>
       </div>
       
       <nav className="flex-1 px-4">
@@ -45,9 +45,7 @@ export const Sidebar: React.FC = () => {
       </nav>
       
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          版本 0.1.0
-        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{t('components.sidebar.version', { version: '0.1.0' })}</div>
       </div>
     </div>
   );

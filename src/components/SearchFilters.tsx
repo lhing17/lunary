@@ -1,5 +1,6 @@
 import React from 'react';
 import { SearchFilters } from '../types';
+import { useI18n } from '../i18n';
 
 interface SearchFiltersProps {
   filters: SearchFilters;
@@ -10,13 +11,14 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
   filters, 
   onFiltersChange 
 }) => {
+  const { t } = useI18n();
   const fileTypes = [
-    { value: 'txt', label: '文本文件 (.txt)' },
-    { value: 'md', label: 'Markdown (.md)' },
-    { value: 'pdf', label: 'PDF文档 (.pdf)' },
-    { value: 'doc', label: 'Word文档 (.doc, .docx)' },
-    { value: 'xls', label: 'Excel表格 (.xls, .xlsx)' },
-    { value: 'ppt', label: 'PPT演示文稿 (.ppt, .pptx)' },
+    { value: 'txt', label: t('components.searchFilters.types.txt') },
+    { value: 'md', label: t('components.searchFilters.types.md') },
+    { value: 'pdf', label: t('components.searchFilters.types.pdf') },
+    { value: 'doc', label: t('components.searchFilters.types.doc') },
+    { value: 'xls', label: t('components.searchFilters.types.xls') },
+    { value: 'ppt', label: t('components.searchFilters.types.ppt') },
   ];
 
   const handleFileTypeChange = (fileType: string, checked: boolean) => {
@@ -35,9 +37,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
     <div className="space-y-4">
       {/* File Type Filter */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-          文件类型
-        </h4>
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">{t('components.searchFilters.fileType')}</h4>
         <div className="space-y-2">
           {fileTypes.map((type) => (
             <label key={type.value} className="flex items-center">
@@ -57,9 +57,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
 
       {/* Date Range Filter */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-          修改时间
-        </h4>
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">{t('components.searchFilters.modifiedTime')}</h4>
         <div className="space-y-2">
           <label className="flex items-center">
             <input
@@ -70,7 +68,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              不限
+              {t('components.searchFilters.any')}
             </span>
           </label>
           <label className="flex items-center">
@@ -88,7 +86,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              最近一天
+              {t('components.searchFilters.lastDay')}
             </span>
           </label>
           <label className="flex items-center">
@@ -106,7 +104,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              最近一周
+              {t('components.searchFilters.lastWeek')}
             </span>
           </label>
           <label className="flex items-center">
@@ -124,7 +122,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              最近一月
+              {t('components.searchFilters.lastMonth')}
             </span>
           </label>
         </div>
@@ -135,7 +133,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
         onClick={() => onFiltersChange({})}
         className="w-full px-3 py-2 text-sm text-primary-600 hover:text-primary-700 border border-primary-200 hover:border-primary-300 rounded-md transition-colors"
       >
-        清除所有筛选
+        {t('components.searchFilters.clear')}
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileText, Calendar, Folder, ExternalLink } from 'lucide-react';
 import { SearchResult } from '../types';
+import { useI18n } from '../i18n';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -13,6 +14,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   isLoading, 
   query 
 }) => {
+  const { t, locale } = useI18n();
   const getFileIcon = (fileType: string) => {
     switch (fileType.toLowerCase()) {
       case 'txt':
@@ -40,13 +42,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return '今天';
+      return t('components.searchResults.today');
     } else if (diffDays === 1) {
-      return '昨天';
+      return t('components.searchResults.yesterday');
     } else if (diffDays < 7) {
-      return `${diffDays}天前`;
+      return t('components.searchResults.daysAgo', { days: diffDays });
     } else {
-      return date.toLocaleDateString('zh-CN');
+      return date.toLocaleDateString(locale);
     }
   };
 
@@ -81,10 +83,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       <div className="text-center py-12">
         <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-          开始搜索
+          {t('components.searchResults.startTitle')}
         </h3>
         <p className="text-gray-500 dark:text-gray-400">
-          在上方输入框中输入关键词开始搜索您的文档
+          {t('components.searchResults.startDesc')}
         </p>
       </div>
     );
@@ -95,10 +97,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       <div className="text-center py-12">
         <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-          未找到结果
+          {t('components.searchResults.emptyTitle')}
         </h3>
         <p className="text-gray-500 dark:text-gray-400">
-          尝试使用不同的关键词或调整筛选条件
+          {t('components.searchResults.emptyDesc')}
         </p>
       </div>
     );

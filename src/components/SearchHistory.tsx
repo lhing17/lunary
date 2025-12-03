@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock, X } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 interface SearchHistoryProps {
   history: string[];
@@ -10,10 +11,11 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({
   history, 
   onHistoryClick 
 }) => {
+  const { t } = useI18n();
   if (history.length === 0) {
     return (
       <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-        暂无搜索历史
+        {t('components.searchHistory.empty')}
       </div>
     );
   }
