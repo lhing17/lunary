@@ -41,6 +41,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleSaveSettings = async () => {
+    // 持久化保存设置
     await saveSettings(settings);
     setHasChanges(false);
   };

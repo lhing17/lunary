@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Trash2, Folder, Clock, CheckCircle, Pause, Play } from 'lucide-react';
 import { DirectoryConfig, IndexStatus } from '../types';
 import { useI18n } from '../i18n';
+import { loadDirectories, saveDirectories } from '../utils/directoriesStorage';
+import { open } from '@tauri-apps/plugin-dialog';
 
 export const IndexManagementPage: React.FC = () => {
   const { t, locale } = useI18n();
@@ -15,37 +17,36 @@ export const IndexManagementPage: React.FC = () => {
     lastUpdated: 0
   });
 
-  // Mock data - will be replaced with Tauri backend calls
   useEffect(() => {
-    setDirectories([
-      {
-        path: '/Users/documents',
-        enabled: true,
-        recursive: true,
-        lastIndexed: Date.now() - 3600000
-      },
-      {
-        path: '/Users/projects',
-        enabled: false,
-        recursive: false,
-        lastIndexed: Date.now() - 86400000
-      }
-    ]);
+    (async () => {
+      const dirs = await loadDirectories();
+      setDirectories(dirs ?? []);
+    })();
   }, []);
 
   const handleAddDirectory = async () => {
-    // TODO: Implement directory picker with Tauri
-    console.log('Add directory');
+    const picked = await open({ directory: true, multiple: true });
+    const paths = Array.isArray(picked) ? picked : picked ? [picked] : [];
+    if (paths.length === 0) return;
+    const existing = new Set(directories.map(d => d.path));
+    const toAdd: DirectoryConfig[] = paths
+      .filter(p => !existing.has(p))
+      .map(p => ({ path: p, enabled: true, recursive: true, lastIndexed: 0 }));
+    const next = [...directories, ...toAdd];
+    setDirectories(next);
+    await saveDirectories(next);
   };
 
-  const handleRemoveDirectory = (path: string) => {
-    setDirectories(directories.filter(dir => dir.path !== path));
+  const handleRemoveDirectory = async (path: string) => {
+    const next = directories.filter(dir => dir.path !== path);
+    setDirectories(next);
+    await saveDirectories(next);
   };
 
-  const handleToggleDirectory = (path: string) => {
-    setDirectories(directories.map(dir => 
-      dir.path === path ? { ...dir, enabled: !dir.enabled } : dir
-    ));
+  const handleToggleDirectory = async (path: string) => {
+    const next = directories.map(dir => dir.path === path ? { ...dir, enabled: !dir.enabled } : dir);
+    setDirectories(next);
+    await saveDirectories(next);
   };
 
   const handleRebuildIndex = async () => {
