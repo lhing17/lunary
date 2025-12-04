@@ -5,6 +5,13 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "fs:default",
+    "fs:allow-appconfig-read",
+    "fs:allow-appconfig-read-recursive",
+    "fs:allow-appconfig-write",
+    "fs:allow-appconfig-write-recursive",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file"
   ]
 }

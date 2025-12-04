@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Save, RotateCcw, Palette, Search, Database } from 'lucide-react';
 import { AppSettings } from '../types';
 import { useI18n } from '../i18n';
+import { saveSettings, loadSettings } from '../utils/settingsStorage';
 
 export const SettingsPage: React.FC = () => {
   const { t, lang, setLang, locale } = useI18n();
@@ -37,9 +38,8 @@ export const SettingsPage: React.FC = () => {
     setHasChanges(true);
   };
 
-  const handleSaveSettings = () => {
-    // TODO: Save settings to Tauri backend
-    console.log('Saving settings:', settings);
+  const handleSaveSettings = async () => {
+    await saveSettings(settings);
     setHasChanges(false);
   };
 
@@ -74,6 +74,16 @@ export const SettingsPage: React.FC = () => {
       ]);
     }
   };
+
+  React.useEffect(() => {
+    (async () => {
+      const loaded = await loadSettings();
+      if (loaded) {
+        setSettings(loaded);
+        if (loaded.ui?.language) setLang(loaded.ui.language as any);
+      }
+    })();
+  }, []);
 
   const handleRemoveExcludePattern = (pattern: string) => {
     handleSettingChange(
