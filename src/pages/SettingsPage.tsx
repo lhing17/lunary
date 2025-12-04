@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, RotateCcw, Palette, Search, Database, Globe } from 'lucide-react';
+import { Save, RotateCcw, Palette, Search, Database } from 'lucide-react';
 import { AppSettings } from '../types';
 import { useI18n } from '../i18n';
 
