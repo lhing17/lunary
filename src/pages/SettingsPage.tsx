@@ -26,6 +26,8 @@ export const SettingsPage: React.FC = () => {
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [showExcludeInput, setShowExcludeInput] = useState(false);
+  const [newExcludePattern, setNewExcludePattern] = useState('');
 
   const handleSettingChange = (section: keyof AppSettings, key: string, value: any) => {
     setSettings(prev => ({
@@ -66,13 +68,24 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleAddExcludePattern = () => {
-    const newPattern = prompt(t('pages.settings.promptExclude'));
-    if (newPattern && !settings.indexing.excludePatterns.includes(newPattern)) {
+    setShowExcludeInput(true);
+  };
+
+  const confirmAddExclude = () => {
+    const pattern = newExcludePattern.trim();
+    if (pattern && !settings.indexing.excludePatterns.includes(pattern)) {
       handleSettingChange('indexing', 'excludePatterns', [
         ...settings.indexing.excludePatterns,
-        newPattern,
+        pattern,
       ]);
+      setNewExcludePattern('');
+      setShowExcludeInput(false);
     }
+  };
+
+  const cancelAddExclude = () => {
+    setNewExcludePattern('');
+    setShowExcludeInput(false);
   };
 
   React.useEffect(() => {
@@ -212,12 +225,35 @@ export const SettingsPage: React.FC = () => {
                       </button>
                     </div>
                   ))}
-                  <button
-                    onClick={handleAddExcludePattern}
-                    className="w-full px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
-                  >
-                    {t('pages.settings.addExclude')}
-                  </button>
+                  {!showExcludeInput ? (
+                    <button
+                      onClick={handleAddExcludePattern}
+                      className="w-full px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                    >
+                      {t('pages.settings.addExclude')}
+                    </button>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        value={newExcludePattern}
+                        onChange={(e) => setNewExcludePattern(e.target.value)}
+                        placeholder={t('pages.settings.newExcludePlaceholder')}
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                      <button
+                        onClick={confirmAddExclude}
+                        className="px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                      >
+                        {t('pages.settings.confirm')}
+                      </button>
+                      <button
+                        onClick={cancelAddExclude}
+                        className="px-3 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        {t('pages.settings.cancel')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
