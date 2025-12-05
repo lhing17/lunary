@@ -49,6 +49,12 @@ export const IndexManagementPage: React.FC = () => {
     await saveDirectories(next);
   };
 
+  const handleToggleRecursive = async (path: string) => {
+    const next = directories.map(dir => dir.path === path ? { ...dir, recursive: !dir.recursive } : dir);
+    setDirectories(next);
+    await saveDirectories(next);
+  };
+
   const handleRebuildIndex = async () => {
     setIndexStatus({
       isIndexing: true,
@@ -86,6 +92,7 @@ export const IndexManagementPage: React.FC = () => {
     }, 200);
   };
 
+  /* 将文件大小变为可读格式 */
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -94,6 +101,7 @@ export const IndexManagementPage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  /* 如果时间戳为0，返回“从未”，否则返回本地时间字符串 */
   const formatDate = (timestamp: number): string => {
     if (timestamp === 0) return t('pages.indexManagement.never');
     const date = new Date(timestamp);
@@ -211,9 +219,17 @@ export const IndexManagementPage: React.FC = () => {
                             <Clock className="w-3 h-3" />
                             <span>{t('pages.indexManagement.lastIndexed', { date: formatDate(directory.lastIndexed) })} </span>
                           </span>
-                          <span>
-                            {directory.recursive ? t('pages.indexManagement.recursive') : t('pages.indexManagement.onlyCurrent')}
-                          </span>
+                          <label className="flex items-center space-x-1">
+                            <input
+                              type="checkbox"
+                              checked={directory.recursive}
+                              onChange={() => handleToggleRecursive(directory.path)}
+                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <span>
+                              {directory.recursive ? t('pages.indexManagement.recursive') : t('pages.indexManagement.onlyCurrent')}
+                            </span>
+                          </label>
                         </div>
                       </div>
                     </div>
