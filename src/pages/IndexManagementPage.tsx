@@ -4,6 +4,8 @@ import { DirectoryConfig, IndexStatus } from '../types';
 import { useI18n } from '../i18n';
 import { loadDirectories, saveDirectories } from '../utils/directoriesStorage';
 import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 
 export const IndexManagementPage: React.FC = () => {
   const { t, locale } = useI18n();
@@ -43,53 +45,37 @@ export const IndexManagementPage: React.FC = () => {
     await saveDirectories(next);
   };
 
+  /* 切换目录是否启用索引 */
   const handleToggleDirectory = async (path: string) => {
     const next = directories.map(dir => dir.path === path ? { ...dir, enabled: !dir.enabled } : dir);
     setDirectories(next);
     await saveDirectories(next);
   };
 
+  /* 切换目录是否递归索引 */
   const handleToggleRecursive = async (path: string) => {
     const next = directories.map(dir => dir.path === path ? { ...dir, recursive: !dir.recursive } : dir);
     setDirectories(next);
     await saveDirectories(next);
   };
 
+  /* 手动触发索引重建 */
   const handleRebuildIndex = async () => {
-    setIndexStatus({
-      isIndexing: true,
-      progress: 0,
-      totalFiles: 1250,
-      indexedFiles: 0,
-      indexSize: 0,
-      lastUpdated: Date.now()
-    });
-
-    // Simulate indexing progress
-    const interval = setInterval(() => {
-      setIndexStatus(prev => {
-        const newProgress = Math.min(prev.progress + 5, 100);
-        const newIndexedFiles = Math.floor((newProgress / 100) * prev.totalFiles);
-        
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          return {
-            ...prev,
-            isIndexing: false,
-            progress: 100,
-            indexedFiles: prev.totalFiles,
-            indexSize: 156 * 1024 * 1024, // 156MB
-            lastUpdated: Date.now()
-          };
-        }
-        
-        return {
-          ...prev,
-          progress: newProgress,
-          indexedFiles: newIndexedFiles
-        };
+    const unlisten = await listen('index-progress', (event) => {
+      const payload = event.payload as any;
+      setIndexStatus({
+        isIndexing: payload.isIndexing,
+        progress: payload.progress,
+        totalFiles: payload.totalFiles,
+        indexedFiles: payload.indexedFiles,
+        indexSize: payload.indexSize,
+        lastUpdated: payload.lastUpdated,
       });
-    }, 200);
+      if (!payload.isIndexing) {
+        unlisten();
+      }
+    });
+    await invoke('rebuild_index', { directories });
   };
 
   /* 将文件大小变为可读格式 */
