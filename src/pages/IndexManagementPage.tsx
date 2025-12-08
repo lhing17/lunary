@@ -6,6 +6,7 @@ import { loadDirectories, saveDirectories } from '../utils/directoriesStorage';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { loadIndexStatus, saveIndexStatus } from '../utils/indexStatusStorage';
 
 export const IndexManagementPage: React.FC = () => {
   const { t, locale } = useI18n();
@@ -23,6 +24,8 @@ export const IndexManagementPage: React.FC = () => {
     (async () => {
       const dirs = await loadDirectories();
       setDirectories(dirs ?? []);
+      const status = await loadIndexStatus();
+      if (status) setIndexStatus(status);
     })();
   }, []);
 
@@ -61,10 +64,18 @@ export const IndexManagementPage: React.FC = () => {
 
   /* 手动触发索引重建 */
   const handleRebuildIndex = async () => {
-    const unlisten = await listen('index-progress', (event) => {
+    const unlisten = await listen('index-progress', async (event) => {
       const payload = event.payload as any;
       setIndexStatus({
         isIndexing: payload.isIndexing,
+        progress: payload.progress,
+        totalFiles: payload.totalFiles,
+        indexedFiles: payload.indexedFiles,
+        indexSize: payload.indexSize,
+        lastUpdated: payload.lastUpdated,
+      });
+      await saveIndexStatus({
+        isIndexing: false, // 在文件中始终存为false
         progress: payload.progress,
         totalFiles: payload.totalFiles,
         indexedFiles: payload.indexedFiles,
