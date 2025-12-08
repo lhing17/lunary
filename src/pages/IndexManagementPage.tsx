@@ -67,22 +67,22 @@ export const IndexManagementPage: React.FC = () => {
     const unlisten = await listen('index-progress', async (event) => {
       const payload = event.payload as any;
       setIndexStatus({
-        isIndexing: payload.isIndexing,
-        progress: payload.progress,
-        totalFiles: payload.totalFiles,
-        indexedFiles: payload.indexedFiles,
-        indexSize: payload.indexSize,
-        lastUpdated: payload.lastUpdated,
-      });
-      await saveIndexStatus({
-        isIndexing: false, // 在文件中始终存为false
-        progress: payload.progress,
-        totalFiles: payload.totalFiles,
-        indexedFiles: payload.indexedFiles,
-        indexSize: payload.indexSize,
-        lastUpdated: payload.lastUpdated,
+        isIndexing: !!payload.isIndexing,
+        progress: Number(payload.progress ?? 0),
+        totalFiles: Number(payload.totalFiles ?? 0),
+        indexedFiles: Number(payload.indexedFiles ?? 0),
+        indexSize: Number(payload.indexSize ?? 0),
+        lastUpdated: Number(payload.lastUpdated ?? 0),
       });
       if (!payload.isIndexing) {
+        await saveIndexStatus({
+          isIndexing: false,
+          progress: Number(payload.progress ?? 0),
+          totalFiles: Number(payload.totalFiles ?? 0),
+          indexedFiles: Number(payload.indexedFiles ?? 0),
+          indexSize: Number(payload.indexSize ?? 0),
+          lastUpdated: Number(payload.lastUpdated ?? 0),
+        });
         unlisten();
       }
     });
@@ -91,17 +91,20 @@ export const IndexManagementPage: React.FC = () => {
 
   /* 将文件大小变为可读格式 */
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    const b = typeof bytes === 'number' && isFinite(bytes) && bytes > 0 ? bytes : 0;
+    if (b === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    const i = Math.min(sizes.length - 1, Math.floor(Math.log(b) / Math.log(k)));
+    return parseFloat((b / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   /* 如果时间戳为0，返回“从未”，否则返回本地时间字符串 */
   const formatDate = (timestamp: number): string => {
-    if (timestamp === 0) return t('pages.indexManagement.never');
-    const date = new Date(timestamp);
+    const ts = typeof timestamp === 'number' && isFinite(timestamp) ? timestamp : 0;
+    if (ts <= 0) return t('pages.indexManagement.never');
+    const date = new Date(ts);
+    if (isNaN(date.getTime())) return t('pages.indexManagement.never');
     return date.toLocaleString(locale);
   };
 
