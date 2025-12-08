@@ -8,11 +8,11 @@ export async function saveIndexStatus(status: IndexStatus) {
   try {
     const base = await appConfigDir();
     const folder = await join(base, 'indexes', 'default');
-    const meta = await join(folder, 'meta.json');
+    const statusFile = await join(folder, 'status.json');
     if (!(await exists(folder))) {
       await mkdir(folder, { recursive: true });
     }
-    await writeTextFile(meta, JSON.stringify(status));
+    await writeTextFile(statusFile, JSON.stringify(status));
   } catch {
     localStorage.setItem(LS_KEY, JSON.stringify(status));
   }
@@ -21,12 +21,11 @@ export async function saveIndexStatus(status: IndexStatus) {
 export async function loadIndexStatus(): Promise<IndexStatus | null> {
   try {
     const base = await appConfigDir();
-    const meta = await join(base, 'indexes', 'default', 'meta.json');
-    const content = await readTextFile(meta);
+    const statusFile = await join(base, 'indexes', 'default', 'status.json');
+    const content = await readTextFile(statusFile);
     return JSON.parse(content) as IndexStatus;
   } catch {
     const ls = localStorage.getItem(LS_KEY);
     return ls ? (JSON.parse(ls) as IndexStatus) : null;
   }
 }
-

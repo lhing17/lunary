@@ -1,5 +1,8 @@
 use serde::Deserialize;
 use tantivy::TantivyDocument;
+use tantivy::schema::{Value, TextOptions, TextFieldIndexing, IndexRecordOption};
+use tantivy::tokenizer::{NgramTokenizer, TextAnalyzer, LowerCaser};
+use tantivy::{collector::TopDocs, query::QueryParser};
 use std::fs;
 use std::path::PathBuf;
 use std::thread;
@@ -25,6 +28,168 @@ struct IndexProgressPayload {
     indexed_files: usize,
     index_size: u64,
     last_updated: i64,
+}
+
+#[derive(serde::Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct SearchResultPayload {
+    id: String,
+    title: String,
+    content: String,
+    file_path: String,
+    file_type: String,
+    modified_time: i64,
+    score: f32,
+    highlights: Vec<String>,
+}
+
+fn byte_to_char_idx(s: &str, byte_idx: usize) -> usize {
+    s[..byte_idx].chars().count()
+}
+
+fn char_to_byte_idx(s: &str, char_idx: usize) -> usize {
+    let mut count = 0usize;
+    for (b_idx, _) in s.char_indices() {
+        if count == char_idx { return b_idx; }
+        count += 1;
+    }
+    s.len()
+}
+
+fn snippet_with_highlight(text: &str, query: &str, pre_chars: usize, post_chars: usize) -> String {
+    if text.is_empty() || query.is_empty() { return String::new(); }
+    let t_low = text.to_lowercase();
+    let q_low = query.to_lowercase();
+    if let Some(pos_b) = t_low.find(&q_low) {
+        let pos_c = byte_to_char_idx(text, pos_b);
+        let q_len_c = query.chars().count();
+        let total_c = text.chars().count();
+        let start_c = pos_c.saturating_sub(pre_chars);
+        let end_c = usize::min(total_c, pos_c + q_len_c + post_chars);
+        let start_b = char_to_byte_idx(text, start_c);
+        let match_start_b = char_to_byte_idx(text, pos_c);
+        let match_end_b = char_to_byte_idx(text, pos_c + q_len_c);
+        let end_b = char_to_byte_idx(text, end_c);
+        let mut out = String::new();
+        out.push_str(&text[start_b..match_start_b]);
+        out.push_str("<mark>");
+        out.push_str(&text[match_start_b..match_end_b]);
+        out.push_str("</mark>");
+        out.push_str(&text[match_end_b..end_b]);
+        return out;
+    }
+    // 未命中时返回开头片段
+    let take_c = usize::min(text.chars().count(), pre_chars + post_chars);
+    let end_b = char_to_byte_idx(text, take_c);
+    text[..end_b].to_string()
+}
+
+/// 搜索索引: 基于已有索引返回匹配文档
+#[tauri::command]
+fn search_index(
+    app: tauri::AppHandle,
+    query: String,
+    limit: Option<usize>,
+) -> Result<Vec<SearchResultPayload>, String> {
+    let limit = limit.unwrap_or(50);
+
+    // 获取索引目录
+    let resolver = app.path();
+    let base_dir = resolver
+        .app_config_dir()
+        .unwrap_or_else(|_| PathBuf::from("."));
+    let index_dir = base_dir.join("indexes").join("default");
+    if !index_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let index = tantivy::Index::open_in_dir(&index_dir)
+        .map_err(|e| format!("open index error: {}", e))?;
+    // 注册中文 n-gram 分词器（2-3 字符，大小写归一）
+    let analyzer = TextAnalyzer::builder(NgramTokenizer::new(2, 3, false).unwrap())
+        .filter(LowerCaser)
+        .build();
+    index.tokenizers().register("cn_ngram", analyzer);
+    let schema = index.schema();
+    let title = schema
+        .get_field("title").unwrap();
+    let content = schema
+        .get_field("content").unwrap();
+    let file_path = schema
+        .get_field("file_path").unwrap();
+    let file_type = schema
+        .get_field("file_type").unwrap();
+    let modified_time = schema
+        .get_field("modified_time").unwrap();
+
+    let reader = index
+        .reader()
+        .map_err(|e| format!("reader error: {}", e))?;
+    let searcher = reader.searcher();
+
+    let parser = QueryParser::for_index(&index, vec![title, content]);
+    let parsed = parser
+        .parse_query(&query)
+        .map_err(|e| format!("parse query error: {}", e))?;
+    let top_docs = searcher
+        .search(&parsed, &TopDocs::with_limit(limit))
+        .map_err(|e| format!("search error: {}", e))?;
+    if top_docs.is_empty() {
+        return Ok(vec![]);
+    }
+    let max_score = top_docs.first().map(|(s, _)| *s).unwrap_or(1.0);
+
+    let mut results = Vec::new();
+    for (score, addr) in top_docs {
+        let retrieved: TantivyDocument = searcher
+            .doc(addr)
+            .map_err(|e| format!("doc read error: {}", e))?;
+        let title_val = retrieved
+            .get_first(title)
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let content_val = retrieved
+            .get_first(content)
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let path_val = retrieved
+            .get_first(file_path)
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let type_val = retrieved
+            .get_first(file_type)
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let modified_val = retrieved
+            .get_first(modified_time)
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0i64);
+
+        let mut highlights = Vec::new();
+        if !content_val.is_empty() {
+            let snippet = snippet_with_highlight(&content_val, &query, 60, 140);
+            if !snippet.is_empty() {
+                highlights.push(snippet);
+            }
+        }
+
+        results.push(SearchResultPayload {
+            id: path_val.clone(),
+            title: title_val,
+            content: content_val,
+            file_path: path_val,
+            file_type: type_val,
+            modified_time: modified_val,
+            score: (score / if max_score > 0.0 { max_score } else { 1.0 }).min(1.0),
+            highlights,
+        });
+    }
+
+    Ok(results)
 }
 
 /// 重建索引: 前端调用该命令触发索引重建
@@ -91,13 +256,16 @@ fn rebuild_index(
             },
         );
 
-        /* 构建索引schema */
-        // SchemaBuilder是用于构建索引schema的，schema定义了索引中的字段和属性
+        /* 构建索引schema（含中文 n-gram 分词支持） */
         let mut schema_builder = tantivy::schema::SchemaBuilder::default();
-        let title =
-            schema_builder.add_text_field("title", tantivy::schema::TEXT | tantivy::schema::STORED);
-        let content = schema_builder
-            .add_text_field("content", tantivy::schema::TEXT | tantivy::schema::STORED);
+        let text_indexing = TextFieldIndexing::default()
+            .set_tokenizer("cn_ngram")
+            .set_index_option(IndexRecordOption::WithFreqsAndPositions);
+        let text_options = TextOptions::default()
+            .set_indexing_options(text_indexing)
+            .set_stored();
+        let title = schema_builder.add_text_field("title", text_options.clone());
+        let content = schema_builder.add_text_field("content", text_options.clone());
         let file_path = schema_builder.add_text_field("file_path", tantivy::schema::STORED);
         let file_type = schema_builder.add_text_field("file_type", tantivy::schema::STORED);
         let modified_time = schema_builder.add_i64_field("modified_time", tantivy::schema::STORED);
@@ -108,6 +276,11 @@ fn rebuild_index(
         let _ = fs::remove_dir_all(&index_dir);
         let _ = fs::create_dir_all(&index_dir);
         let index = tantivy::Index::create_in_dir(&index_dir, schema.clone()).unwrap();
+        // 注册中文 n-gram 分词器（2-3 字符，大小写归一）
+        let analyzer = TextAnalyzer::builder(NgramTokenizer::new(2, 3, false).unwrap())
+            .filter(LowerCaser)
+            .build();
+        index.tokenizers().register("cn_ngram", analyzer);
         let mut writer = index.writer(50_000_000).unwrap(); // writer的参数是内存缓冲区大小，单位是字节
 
         let mut indexed = 0usize;
@@ -207,7 +380,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![rebuild_index])
+        .invoke_handler(tauri::generate_handler![rebuild_index, search_index])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

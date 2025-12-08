@@ -5,6 +5,7 @@ import { SearchResults } from '../components/SearchResults';
 import { SearchFiltersComponent } from '../components/SearchFilters';
 import { SearchHistory } from '../components/SearchHistory';
 import { useI18n } from '../i18n';
+import { invoke } from '@tauri-apps/api/core';
 
 export const SearchPage: React.FC = () => {
   const { t } = useI18n();
@@ -17,7 +18,6 @@ export const SearchPage: React.FC = () => {
   const [filters, setFilters] = useState<SearchFilters>({});
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-  // Mock search function - will be replaced with Tauri backend call
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -25,39 +25,22 @@ export const SearchPage: React.FC = () => {
     }
 
     setIsSearching(true);
+    const t0 = performance.now(); // 搜索开始时间
+    try {
+      const results = await invoke<SearchResult[]>('search_index', { query: searchQuery, limit: 50 });
+      console.log(results);
+      setSearchResults(results);
+      setTotalResults(results.length);
+      const t1 = performance.now();
+      setSearchTime(Number(((t1 - t0) / 1000).toFixed(3))); // 搜索耗时（秒）
+    } catch (e) {
+      console.error('Search error:', e);
+      setSearchResults([]);
+      setTotalResults(0);
+      setSearchTime(0);
+    }
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Mock results
-    const mockResults: SearchResult[] = [
-      {
-        id: '1',
-        title: '示例文档1.txt',
-        content: '这是一个包含搜索关键词的示例文档内容。文档中包含了重要的信息和数据。',
-        filePath: '/Users/documents/示例文档1.txt',
-        fileType: 'txt',
-        modifiedTime: Date.now() - 86400000,
-        score: 0.95,
-        highlights: ['这是一个包含<em>搜索</em>关键词的示例文档内容']
-      },
-      {
-        id: '2',
-        title: '项目说明.md',
-        content: '搜索功能是本项目的核心特性之一，它允许用户快速找到所需的文档和信息。',
-        filePath: '/Users/documents/项目说明.md',
-        fileType: 'md',
-        modifiedTime: Date.now() - 172800000,
-        score: 0.87,
-        highlights: ['<em>搜索</em>功能是本项目的核心特性之一']
-      }
-    ];
-
-    setSearchResults(mockResults);
-    setTotalResults(mockResults.length);
-    setSearchTime(0.125);
-    
-    // Update search history
+    // 更新搜索历史
     if (!searchHistory.includes(searchQuery)) {
       setSearchHistory(prev => [searchQuery, ...prev.slice(0, 9)]);
     }
