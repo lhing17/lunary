@@ -56,11 +56,24 @@ fn char_to_byte_idx(s: &str, char_idx: usize) -> usize {
     s.len()
 }
 
+/// 生成包含查询高亮的文本片段
+///
+/// # 参数
+///
+/// * `text` - 原始文本
+/// * `query` - 查询字符串
+/// * `pre_chars` - 片段前保留字符数
+/// * `post_chars` - 片段后保留字符数
+///
+/// # 返回值
+///
+/// 返回包含查询高亮的文本片段字符串
 fn snippet_with_highlight(text: &str, query: &str, pre_chars: usize, post_chars: usize) -> String {
     if text.is_empty() || query.is_empty() { return String::new(); }
     let t_low = text.to_lowercase();
     let q_low = query.to_lowercase();
     if let Some(pos_b) = t_low.find(&q_low) {
+        /* 文本高亮的逻辑 */
         let pos_c = byte_to_char_idx(text, pos_b);
         let q_len_c = query.chars().count();
         let total_c = text.chars().count();
@@ -105,11 +118,13 @@ fn search_index(
 
     let index = tantivy::Index::open_in_dir(&index_dir)
         .map_err(|e| format!("open index error: {}", e))?;
+
     // 注册中文 n-gram 分词器（2-3 字符，大小写归一）
     let analyzer = TextAnalyzer::builder(NgramTokenizer::new(2, 3, false).unwrap())
         .filter(LowerCaser)
         .build();
     index.tokenizers().register("cn_ngram", analyzer);
+
     let schema = index.schema();
     let title = schema
         .get_field("title").unwrap();
@@ -127,10 +142,13 @@ fn search_index(
         .map_err(|e| format!("reader error: {}", e))?;
     let searcher = reader.searcher();
 
+    // 在标题和内容字段上查询
     let parser = QueryParser::for_index(&index, vec![title, content]);
     let parsed = parser
         .parse_query(&query)
         .map_err(|e| format!("parse query error: {}", e))?;
+
+    // 查找前 limit 个文档
     let top_docs = searcher
         .search(&parsed, &TopDocs::with_limit(limit))
         .map_err(|e| format!("search error: {}", e))?;
