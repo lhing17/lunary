@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Search, Filter, Clock } from 'lucide-react';
 import { SearchResult, SearchFilters } from '../types';
 import { SearchResults } from '../components/SearchResults';
@@ -41,23 +41,16 @@ export const SearchPage: React.FC = () => {
     }
     
     // 更新搜索历史
-    if (!searchHistory.includes(searchQuery)) {
-      setSearchHistory(prev => [searchQuery, ...prev.slice(0, 9)]);
-    }
+    setSearchHistory(prev => prev.includes(searchQuery) ? prev : [searchQuery, ...prev.slice(0, 9)]);
     
     setIsSearching(false);
-  }, [searchHistory]);
+  }, []);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performSearch(query);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [query, performSearch]);
+  
 
   const handleSearchHistoryClick = (historyQuery: string) => {
     setQuery(historyQuery);
+    performSearch(historyQuery);
   };
 
   return (
@@ -78,6 +71,12 @@ export const SearchPage: React.FC = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isSearching) {
+                  e.preventDefault();
+                  performSearch(query);
+                }
+              }}
               placeholder={t('pages.searchPage.placeholder')}
               className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
