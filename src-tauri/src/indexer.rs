@@ -1,4 +1,5 @@
 use tantivy::schema::{Field, Schema, IndexRecordOption, TextFieldIndexing, TextOptions};
+use tantivy::schema::{STRING, STORED, FAST, INDEXED};
 use tantivy::TantivyDocument;
 use tantivy::tokenizer::{LowerCaser, NgramTokenizer, TextAnalyzer};
 use tauri::AppHandle;
@@ -44,9 +45,9 @@ fn build_schema() -> Schema {
         .set_stored();
     schema_builder.add_text_field("title", title_options);
     schema_builder.add_text_field("content", content_options);
-    schema_builder.add_text_field("file_path", tantivy::schema::STORED);
-    schema_builder.add_text_field("file_type", tantivy::schema::STORED);
-    schema_builder.add_i64_field("modified_time", tantivy::schema::STORED);
+    schema_builder.add_text_field("file_path", STORED);
+    schema_builder.add_text_field("file_type", STRING | STORED);
+    schema_builder.add_i64_field("modified_time", INDEXED | STORED | FAST);
     schema_builder.add_u64_field("file_size", tantivy::schema::STORED);
     schema_builder.build()
 }
@@ -143,4 +144,3 @@ fn compute_dir_size(dir: &PathBuf) -> u64 {
     if let Ok(rd) = fs::read_dir(dir) { for e in rd.flatten() { if let Ok(m) = e.metadata() { size += m.len(); } } }
     size
 }
-

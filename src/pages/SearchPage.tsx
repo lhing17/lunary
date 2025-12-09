@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Search, Filter, Clock } from 'lucide-react';
 import { SearchResult, SearchFilters } from '../types';
 import { SearchResults } from '../components/SearchResults';
@@ -27,8 +27,7 @@ export const SearchPage: React.FC = () => {
     setIsSearching(true);
     const t0 = performance.now(); // 搜索开始时间
     try {
-      const results = await invoke<SearchResult[]>('search_index', { query: searchQuery, limit: 50 });
-      console.log(results);
+      const results = await invoke<SearchResult[]>('search_index', { query: searchQuery, limit: 50, filters });
       setSearchResults(results);
       setTotalResults(results.length);
       const t1 = performance.now();
@@ -44,7 +43,7 @@ export const SearchPage: React.FC = () => {
     setSearchHistory(prev => prev.includes(searchQuery) ? prev : [searchQuery, ...prev.slice(0, 9)]);
     
     setIsSearching(false);
-  }, []);
+  }, [filters]);
 
   
 
@@ -52,6 +51,12 @@ export const SearchPage: React.FC = () => {
     setQuery(historyQuery);
     performSearch(historyQuery);
   };
+
+  useEffect(() => {
+    if (query.trim() && !isSearching) {
+      performSearch(query);
+    }
+  }, [filters]);
 
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -158,3 +163,4 @@ export const SearchPage: React.FC = () => {
     </div>
   );
 };
+

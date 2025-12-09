@@ -1,8 +1,14 @@
+use std::ops::Bound;
+
 use crate::indexer;
-use crate::types::SearchResultPayload;
-use tantivy::schema::Value;
+use crate::types::{SearchResultPayload, SearchFiltersCmd};
 use tantivy::{collector::TopDocs, query::QueryParser, TantivyDocument};
+use tantivy::query::{BooleanQuery, Occur, RangeQuery, AllQuery, Query};
+use tantivy::{Term};
 use tauri::AppHandle;
+use tantivy::schema::{Value, IndexRecordOption};
+
+
 
 fn byte_to_char_idx(s: &str, byte_idx: usize) -> usize {
     s[..byte_idx].chars().count()
@@ -65,6 +71,7 @@ pub fn do_search_index(
     app: AppHandle,
     query: String,
     limit: Option<usize>,
+    filters: Option<SearchFiltersCmd>,
 ) -> Result<Vec<SearchResultPayload>, String> {
     let limit = limit.unwrap_or(50);
     let index_dir = indexer::app_index_dir(&app);
@@ -81,13 +88,43 @@ pub fn do_search_index(
 
     let reader = index.reader().map_err(|e| format!("reader error: {}", e))?;
     let searcher = reader.searcher();
-    // 根据标题和内容字段进行查询
+    // 根据标题和内容字段进行查询，并应用后端过滤
     let parser = QueryParser::for_index(&index, vec![title, content]);
-    let parsed = parser
-        .parse_query(&query)
-        .map_err(|e| format!("parse query error: {}", e))?;
+    let base_query: Box<dyn Query> = if query.trim().is_empty() {
+        Box::new(AllQuery)
+    } else {
+        Box::new(parser.parse_query(&query).map_err(|e| format!("parse query error: {}", e))?)
+    };
+    let mut clauses: Vec<(Occur, Box<dyn Query>)> = vec![(Occur::Must, base_query)];
+    if let Some(f) = filters {
+        if let Some(file_types) = f.file_types {
+            if !file_types.is_empty() {
+                let mut expanded: Vec<String> = Vec::new();
+                for ft in file_types {
+                    if ft == "plain" { expanded.extend(["js","ts","json","rs"].iter().map(|s| s.to_string())); }
+                    else { expanded.push(ft); }
+                }
+                expanded.sort(); expanded.dedup();
+                let mut should_terms: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+                for ft in expanded {
+                    let term = Term::from_field_text(file_type, &ft);
+                    should_terms.push((Occur::Should, Box::new(tantivy::query::TermQuery::new(term, IndexRecordOption::Basic))));
+                }
+                if !should_terms.is_empty() {
+                    clauses.push((Occur::Must, Box::new(BooleanQuery::new(should_terms))));
+                }
+            }
+        }
+        if let Some(dr) = f.date_range {
+            let start = dr.start.unwrap_or(i64::MIN);
+            let end = dr.end.unwrap_or(i64::MAX);
+            let rq = RangeQuery::new(Bound::Included(Term::from_field_i64(modified_time, start)), Bound::Included(Term::from_field_i64(modified_time, end)));
+            clauses.push((Occur::Must, Box::new(rq)));
+        }
+    }
+    let final_query = BooleanQuery::new(clauses);
     let top_docs = searcher
-        .search(&parsed, &TopDocs::with_limit(limit))
+        .search(&final_query, &TopDocs::with_limit(limit))
         .map_err(|e| format!("search error: {}", e))?;
     if top_docs.is_empty() {
         return Ok(vec![]);
