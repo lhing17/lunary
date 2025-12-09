@@ -13,6 +13,7 @@ export default {
       doc: 'Word (.doc, .docx)',
       xls: 'Excel (.xls, .xlsx)',
       ppt: 'PowerPoint (.ppt, .pptx)',
+      plain: 'Other Plain Text (.js, .json, ...)',
     },
     modifiedTime: 'Modified Time',
     any: 'Any',

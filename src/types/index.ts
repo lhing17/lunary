@@ -37,6 +37,7 @@ export interface SearchFilters {
     start?: number;
     end?: number;
   };
+  datePreset?: 'any' | 'lastDay' | 'lastWeek' | 'lastMonth';
   fileSizeRange?: {
     min?: number;
     max?: number;

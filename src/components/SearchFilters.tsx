@@ -12,6 +12,24 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
   onFiltersChange 
 }) => {
   const { t } = useI18n();
+  const setDatePreset = (preset: 'any' | 'lastDay' | 'lastWeek' | 'lastMonth') => {
+    if (preset === 'any') {
+      onFiltersChange({ ...filters, dateRange: undefined, datePreset: 'any' });
+      return;
+    }
+    const now = Date.now();
+    const presets: Record<string, number> = {
+      lastDay: 86400000,
+      lastWeek: 604800000,
+      lastMonth: 2592000000,
+    };
+    const delta = presets[preset];
+    onFiltersChange({
+      ...filters,
+      dateRange: { start: now - delta, end: now },
+      datePreset: preset,
+    });
+  };
   const fileTypes = [
     { value: 'txt', label: t('components.searchFilters.types.txt') },
     { value: 'md', label: t('components.searchFilters.types.md') },
@@ -19,6 +37,7 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
     { value: 'doc', label: t('components.searchFilters.types.doc') },
     { value: 'xls', label: t('components.searchFilters.types.xls') },
     { value: 'ppt', label: t('components.searchFilters.types.ppt') },
+    { value: 'plain', label: t('components.searchFilters.types.plain') },
   ];
 
   const handleFileTypeChange = (fileType: string, checked: boolean) => {
@@ -63,8 +82,8 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
             <input
               type="radio"
               name="dateRange"
-              checked={!filters.dateRange}
-              onChange={() => onFiltersChange({ ...filters, dateRange: undefined })}
+              checked={!filters.dateRange || filters.datePreset === 'any'}
+              onChange={() => setDatePreset('any')}
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -75,14 +94,8 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
             <input
               type="radio"
               name="dateRange"
-              checked={filters.dateRange?.start === Date.now() - 86400000}
-              onChange={() => onFiltersChange({ 
-                ...filters, 
-                dateRange: { 
-                  start: Date.now() - 86400000,
-                  end: Date.now()
-                }
-              })}
+              checked={filters.datePreset === 'lastDay'}
+              onChange={() => setDatePreset('lastDay')}
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -93,14 +106,8 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
             <input
               type="radio"
               name="dateRange"
-              checked={filters.dateRange?.start === Date.now() - 604800000}
-              onChange={() => onFiltersChange({ 
-                ...filters, 
-                dateRange: { 
-                  start: Date.now() - 604800000,
-                  end: Date.now()
-                }
-              })}
+              checked={filters.datePreset === 'lastWeek'}
+              onChange={() => setDatePreset('lastWeek')}
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -111,14 +118,8 @@ export const SearchFiltersComponent: React.FC<SearchFiltersProps> = ({
             <input
               type="radio"
               name="dateRange"
-              checked={filters.dateRange?.start === Date.now() - 2592000000}
-              onChange={() => onFiltersChange({ 
-                ...filters, 
-                dateRange: { 
-                  start: Date.now() - 2592000000,
-                  end: Date.now()
-                }
-              })}
+              checked={filters.datePreset === 'lastMonth'}
+              onChange={() => setDatePreset('lastMonth')}
               className="border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">

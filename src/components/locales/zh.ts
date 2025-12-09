@@ -13,6 +13,7 @@ export default {
       doc: 'Word文档 (.doc, .docx)',
       xls: 'Excel表格 (.xls, .xlsx)',
       ppt: 'PPT演示文稿 (.ppt, .pptx)',
+      plain: '其他文本文件(.js, .json, ...)',
     },
     modifiedTime: '修改时间',
     any: '不限',
