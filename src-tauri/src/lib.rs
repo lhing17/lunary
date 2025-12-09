@@ -123,7 +123,11 @@ fn search_index(
     let analyzer = TextAnalyzer::builder(NgramTokenizer::new(2, 3, false).unwrap())
         .filter(LowerCaser)
         .build();
+    let analyzer_small = TextAnalyzer::builder(NgramTokenizer::new(1, 3, false).unwrap())
+        .filter(LowerCaser)
+        .build();
     index.tokenizers().register("cn_ngram", analyzer);
+    index.tokenizers().register("cn_ngram_small", analyzer_small);
 
     let schema = index.schema();
     let title = schema
@@ -276,14 +280,20 @@ fn rebuild_index(
 
         /* 构建索引schema（含中文 n-gram 分词支持） */
         let mut schema_builder = tantivy::schema::SchemaBuilder::default();
-        let text_indexing = TextFieldIndexing::default()
+        let text_indexing_title = TextFieldIndexing::default()
+            .set_tokenizer("cn_ngram_small")
+            .set_index_option(IndexRecordOption::WithFreqsAndPositions);
+        let text_indexing_content = TextFieldIndexing::default()
             .set_tokenizer("cn_ngram")
             .set_index_option(IndexRecordOption::WithFreqsAndPositions);
-        let text_options = TextOptions::default()
-            .set_indexing_options(text_indexing)
+        let title_options = TextOptions::default()
+            .set_indexing_options(text_indexing_title)
             .set_stored();
-        let title = schema_builder.add_text_field("title", text_options.clone());
-        let content = schema_builder.add_text_field("content", text_options.clone());
+        let content_options = TextOptions::default()
+            .set_indexing_options(text_indexing_content)
+            .set_stored();
+        let title = schema_builder.add_text_field("title", title_options);
+        let content = schema_builder.add_text_field("content", content_options);
         let file_path = schema_builder.add_text_field("file_path", tantivy::schema::STORED);
         let file_type = schema_builder.add_text_field("file_type", tantivy::schema::STORED);
         let modified_time = schema_builder.add_i64_field("modified_time", tantivy::schema::STORED);
@@ -298,7 +308,11 @@ fn rebuild_index(
         let analyzer = TextAnalyzer::builder(NgramTokenizer::new(2, 3, false).unwrap())
             .filter(LowerCaser)
             .build();
+        let analyzer_small = TextAnalyzer::builder(NgramTokenizer::new(1, 3, false).unwrap())
+            .filter(LowerCaser)
+            .build();
         index.tokenizers().register("cn_ngram", analyzer);
+        index.tokenizers().register("cn_ngram_small", analyzer_small);
         let mut writer = index.writer(50_000_000).unwrap(); // writer的参数是内存缓冲区大小，单位是字节
 
         let mut indexed = 0usize;
