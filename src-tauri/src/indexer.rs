@@ -1,5 +1,5 @@
 use tantivy::schema::{Field, Schema, IndexRecordOption, TextFieldIndexing, TextOptions};
-use tantivy::schema::{STRING, STORED, FAST, INDEXED};
+use tantivy::schema::{INDEXED, FAST, STORED};
 use tantivy::TantivyDocument;
 use tantivy::tokenizer::{LowerCaser, NgramTokenizer, TextAnalyzer};
 use tauri::AppHandle;
@@ -46,9 +46,17 @@ fn build_schema() -> Schema {
     schema_builder.add_text_field("title", title_options);
     schema_builder.add_text_field("content", content_options);
     schema_builder.add_text_field("file_path", STORED);
-    schema_builder.add_text_field("file_type", STRING | STORED);
-    schema_builder.add_i64_field("modified_time", INDEXED | STORED | FAST);
-    schema_builder.add_u64_field("file_size", tantivy::schema::STORED);
+    // file_type: 作为精确匹配，使用 raw 分词器并存储
+    let ft_indexing = TextFieldIndexing::default()
+        .set_tokenizer("raw")
+        .set_index_option(IndexRecordOption::Basic);
+    let ft_options = TextOptions::default()
+        .set_indexing_options(ft_indexing)
+        .set_stored();
+    schema_builder.add_text_field("file_type", ft_options);
+    // modified_time：数值字段，默认可用于 RangeQuery，同时存储
+    schema_builder.add_i64_field("modified_time", INDEXED | FAST | STORED);
+    schema_builder.add_u64_field("file_size", STORED);
     schema_builder.build()
 }
 
@@ -100,7 +108,7 @@ fn make_doc(path: &PathBuf, title: Field, content: Field, file_path: Field, file
     doc.add_text(file_path, path.to_string_lossy());
     doc.add_text(file_type, ext);
     if let Some(m) = &meta {
-        let mt = m.modified().ok().and_then(|t| t.elapsed().ok()).map(|e| (chrono::Utc::now().timestamp_millis() - e.as_millis() as i64)).unwrap_or(0);
+        let mt = m.modified().ok().and_then(|t| t.elapsed().ok()).map(|e| chrono::Utc::now().timestamp_millis() - e.as_millis() as i64).unwrap_or(0);
         doc.add_i64(modified_time, mt);
         doc.add_u64(file_size, m.len());
     }

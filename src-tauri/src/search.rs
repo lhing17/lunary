@@ -132,7 +132,7 @@ pub fn do_search_index(
             let end = dr.end.unwrap_or(i64::MAX);
             let rq = RangeQuery::new(
                 Bound::Included(Term::from_field_i64(modified_time, start)),
-                Bound::Excluded(Term::from_field_i64(modified_time, end)),
+                Bound::Included(Term::from_field_i64(modified_time, end)),
             );
             clauses.push((Occur::Must, Box::new(rq)));
         }
