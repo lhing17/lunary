@@ -66,4 +66,9 @@ export default {
     licenseLabel: 'License:',
     promptExclude: 'Enter an exclude pattern (e.g.: *.tmp):',
   },
+  common: {
+    prev: 'Previous',
+    next: 'Next',
+    perPage: 'Results per page',
+  }
 };

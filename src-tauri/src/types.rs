@@ -34,6 +34,15 @@ pub struct SearchResultPayload {
     pub highlights: Vec<String>,
 }
 
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResponsePayload {
+    pub results: Vec<SearchResultPayload>,
+    pub total_count: usize,
+}
+
+
+
 #[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchFiltersCmd {
@@ -47,3 +56,4 @@ pub struct DateRangeCmd {
     pub start: Option<i64>,
     pub end: Option<i64>,
 }
+

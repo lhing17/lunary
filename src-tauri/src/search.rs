@@ -1,11 +1,12 @@
 use std::ops::Bound;
 
 use crate::indexer;
-use crate::types::{SearchFiltersCmd, SearchResultPayload};
+use crate::types::{SearchFiltersCmd, SearchResultPayload, SearchResponsePayload};
 use tantivy::query::{AllQuery, BooleanQuery, Occur, Query, RangeQuery};
 use tantivy::schema::{IndexRecordOption, Value};
 use tantivy::Term;
 use tantivy::{collector::TopDocs, query::QueryParser, TantivyDocument};
+use tantivy::collector::Count;
 use tauri::AppHandle;
 
 fn byte_to_char_idx(s: &str, byte_idx: usize) -> usize {
@@ -69,12 +70,14 @@ pub fn do_search_index(
     app: AppHandle,
     query: String,
     limit: Option<usize>,
+    offset: Option<usize>,
     filters: Option<SearchFiltersCmd>,
-) -> Result<Vec<SearchResultPayload>, String> {
-    let limit = limit.unwrap_or(50);
+) -> Result<SearchResponsePayload, String> {
+    let limit = limit.unwrap_or(20);
+    let offset = offset.unwrap_or(0);
     let index_dir = indexer::app_index_dir(&app);
     if !index_dir.exists() {
-        return Ok(vec![]);
+        return Ok(SearchResponsePayload { results: vec![], total_count: 0});
     }
 
     let index =
@@ -99,6 +102,7 @@ pub fn do_search_index(
     };
     let mut clauses: Vec<(Occur, Box<dyn Query>)> = vec![(Occur::Must, base_query)];
     if let Some(f) = filters {
+        // 匹配文件类型
         if let Some(file_types) = f.file_types {
             if !file_types.is_empty() {
                 let mut expanded: Vec<String> = Vec::new();
@@ -127,6 +131,7 @@ pub fn do_search_index(
                 }
             }
         }
+        // 匹配时间区间
         if let Some(dr) = f.date_range {
             let start = dr.start.unwrap_or(i64::MIN);
             let end = dr.end.unwrap_or(i64::MAX);
@@ -137,12 +142,14 @@ pub fn do_search_index(
             clauses.push((Occur::Must, Box::new(rq)));
         }
     }
+
+    // 将所有查询条件拼接到一起，成为最终条件
     let final_query = BooleanQuery::new(clauses);
-    let top_docs = searcher
-        .search(&final_query, &TopDocs::with_limit(limit))
+    let (top_docs, total_count) = searcher
+        .search(&final_query, &(TopDocs::with_limit(limit).and_offset(offset), Count))
         .map_err(|e| format!("search error: {}", e))?;
     if top_docs.is_empty() {
-        return Ok(vec![]);
+        return Ok(SearchResponsePayload { results: vec![], total_count });
     }
     let max_score = top_docs.first().map(|(s, _)| *s).unwrap_or(1.0);
 
@@ -193,5 +200,5 @@ pub fn do_search_index(
             highlights,
         });
     }
-    Ok(results)
+    Ok(SearchResponsePayload { results, total_count })
 }

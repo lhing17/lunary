@@ -66,4 +66,9 @@ export default {
     licenseLabel: '开源协议:',
     promptExclude: '输入要排除的文件模式 (例如: *.tmp):',
   },
+  common: {
+    prev: '上一页',
+    next: '下一页',
+    perPage: '每页结果数',
+  }
 };

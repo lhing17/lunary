@@ -1,7 +1,7 @@
 mod indexer;
 mod search;
 mod types;
-use crate::types::{SearchResultPayload, DirectoryConfigCmd, SearchFiltersCmd};
+use crate::types::{ DirectoryConfigCmd, SearchFiltersCmd, SearchResponsePayload};
 
 /// 搜索索引: 基于已有索引返回匹配文档
 #[tauri::command]
@@ -9,9 +9,10 @@ fn search_index(
     app: tauri::AppHandle,
     query: String,
     limit: Option<usize>,
+    offset: Option<usize>,
     filters: Option<SearchFiltersCmd>,
-) -> Result<Vec<SearchResultPayload>, String> {
-    crate::search::do_search_index(app, query, limit, filters)
+) -> Result<SearchResponsePayload, String> {
+    crate::search::do_search_index(app, query, limit, offset, filters)
 }
 
 /// 重建索引: 前端调用该命令触发索引重建
