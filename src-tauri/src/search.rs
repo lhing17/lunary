@@ -1,14 +1,12 @@
 use std::ops::Bound;
 
 use crate::indexer;
-use crate::types::{SearchResultPayload, SearchFiltersCmd};
+use crate::types::{SearchFiltersCmd, SearchResultPayload};
+use tantivy::query::{AllQuery, BooleanQuery, Occur, Query, RangeQuery};
+use tantivy::schema::{IndexRecordOption, Value};
+use tantivy::Term;
 use tantivy::{collector::TopDocs, query::QueryParser, TantivyDocument};
-use tantivy::query::{BooleanQuery, Occur, RangeQuery, AllQuery, Query};
-use tantivy::{Term};
 use tauri::AppHandle;
-use tantivy::schema::{Value, IndexRecordOption};
-
-
 
 fn byte_to_char_idx(s: &str, byte_idx: usize) -> usize {
     s[..byte_idx].chars().count()
@@ -93,7 +91,11 @@ pub fn do_search_index(
     let base_query: Box<dyn Query> = if query.trim().is_empty() {
         Box::new(AllQuery)
     } else {
-        Box::new(parser.parse_query(&query).map_err(|e| format!("parse query error: {}", e))?)
+        Box::new(
+            parser
+                .parse_query(&query)
+                .map_err(|e| format!("parse query error: {}", e))?,
+        )
     };
     let mut clauses: Vec<(Occur, Box<dyn Query>)> = vec![(Occur::Must, base_query)];
     if let Some(f) = filters {
@@ -101,14 +103,24 @@ pub fn do_search_index(
             if !file_types.is_empty() {
                 let mut expanded: Vec<String> = Vec::new();
                 for ft in file_types {
-                    if ft == "plain" { expanded.extend(["js","ts","json","rs"].iter().map(|s| s.to_string())); }
-                    else { expanded.push(ft); }
+                    if ft == "plain" {
+                        expanded.extend(["js", "ts", "json", "rs"].iter().map(|s| s.to_string()));
+                    } else {
+                        expanded.push(ft);
+                    }
                 }
-                expanded.sort(); expanded.dedup();
+                expanded.sort();
+                expanded.dedup();
                 let mut should_terms: Vec<(Occur, Box<dyn Query>)> = Vec::new();
                 for ft in expanded {
                     let term = Term::from_field_text(file_type, &ft);
-                    should_terms.push((Occur::Should, Box::new(tantivy::query::TermQuery::new(term, IndexRecordOption::Basic))));
+                    should_terms.push((
+                        Occur::Should,
+                        Box::new(tantivy::query::TermQuery::new(
+                            term,
+                            IndexRecordOption::Basic,
+                        )),
+                    ));
                 }
                 if !should_terms.is_empty() {
                     clauses.push((Occur::Must, Box::new(BooleanQuery::new(should_terms))));
@@ -118,7 +130,10 @@ pub fn do_search_index(
         if let Some(dr) = f.date_range {
             let start = dr.start.unwrap_or(i64::MIN);
             let end = dr.end.unwrap_or(i64::MAX);
-            let rq = RangeQuery::new(Bound::Included(Term::from_field_i64(modified_time, start)), Bound::Included(Term::from_field_i64(modified_time, end)));
+            let rq = RangeQuery::new(
+                Bound::Included(Term::from_field_i64(modified_time, start)),
+                Bound::Excluded(Term::from_field_i64(modified_time, end)),
+            );
             clauses.push((Occur::Must, Box::new(rq)));
         }
     }
