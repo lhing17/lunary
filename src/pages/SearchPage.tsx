@@ -144,7 +144,7 @@ export const SearchPage: React.FC = () => {
                   </h3>
                   <SearchFiltersComponent
                     filters={filters}
-                    onFiltersChange={setFilters}
+                    onFiltersChange={(newFilters) => {setFilters(newFilters); setCurrentPage(1);}}
                   />
                 </div>
               </>
