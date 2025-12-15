@@ -27,6 +27,13 @@ serde_json = "1"
 tantivy = "0.25"
 walkdir = "2"
 chrono = "0.4"
+# calamine用于读取EXCEL文件
+calamine = "0.22" 
+# quick-xml和zip配合，用于读取WORD文档
+quick-xml = "0.38.4"
+zip = "0.6"
+# pdf-extract用于提取PDF中的文字
+pdf-extract = "0.6"
 
 [profile.dev]
 debug = true
