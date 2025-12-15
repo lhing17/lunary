@@ -338,3 +338,99 @@ fn compute_dir_size(dir: &PathBuf) -> u64 {
     }
     size
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use zip::write::FileOptions;
+    use zip::CompressionMethod;
+
+    fn write_docx(path: &PathBuf, text: &str) {
+        let file = fs::File::create(path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let options = FileOptions::default().compression_method(CompressionMethod::Stored);
+        let docxml = format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\
+            <w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">\
+            <w:body><w:p><w:r><w:t>{}</w:t></w:r></w:p></w:body></w:document>",
+            text
+        );
+        zip.start_file("word/document.xml", options).unwrap();
+        zip.write_all(docxml.as_bytes()).unwrap();
+        zip.finish().unwrap();
+    }
+
+    fn write_xlsx(path: &PathBuf, a: &str, b: &str) {
+        let file = fs::File::create(path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let options = FileOptions::default().compression_method(CompressionMethod::Stored);
+        // [Content_Types].xml
+        let content_types = r##"<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>"##;
+        zip.start_file("[Content_Types].xml", options).unwrap();
+        zip.write_all(content_types.as_bytes()).unwrap();
+        // _rels/.rels
+        let rels = r##"<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="/xl/workbook.xml"/>
+</Relationships>"##;
+        zip.start_file("_rels/.rels", options).unwrap();
+        zip.write_all(rels.as_bytes()).unwrap();
+        // xl/workbook.xml
+        let workbook = r##"<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets>
+</workbook>"##;
+        zip.start_file("xl/workbook.xml", options).unwrap();
+        zip.write_all(workbook.as_bytes()).unwrap();
+        // xl/_rels/workbook.xml.rels
+        let wb_rels = r##"<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+</Relationships>"##;
+        zip.start_file("xl/_rels/workbook.xml.rels", options).unwrap();
+        zip.write_all(wb_rels.as_bytes()).unwrap();
+        // xl/worksheets/sheet1.xml with inline strings
+        let sheet = format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">\
+  <sheetData>\
+    <row r=\"1\">\
+      <c r=\"A1\" t=\"inlineStr\"><is><t>{}</t></is></c>\
+      <c r=\"B1\" t=\"inlineStr\"><is><t>{}</t></is></c>\
+    </row>\
+  </sheetData>\
+</worksheet>", a, b);
+        zip.start_file("xl/worksheets/sheet1.xml", options).unwrap();
+        zip.write_all(sheet.as_bytes()).unwrap();
+        zip.finish().unwrap();
+    }
+
+    #[test]
+    fn test_read_docx() {
+        let tmp = std::env::temp_dir().join("test_docx_read.docx");
+        write_docx(&tmp, "Hello 路由器");
+        let s = read_doc(&tmp);
+        assert!(s.contains("Hello"));
+        assert!(s.contains("路由器"));
+        println!("{}", s);
+        let _ = fs::remove_file(&tmp);
+    }
+
+    #[test]
+    fn test_read_xlsx() {
+        let tmp = std::env::temp_dir().join("test_xlsx_read.xlsx");
+        write_xlsx(&tmp, "Hello", "路由器");
+        let s = read_excel(&tmp);
+        assert!(s.contains("Hello"));
+        assert!(s.contains("路由器"));
+        println!("{}", s);
+        let _ = fs::remove_file(&tmp);
+    }
+}
