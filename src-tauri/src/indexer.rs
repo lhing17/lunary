@@ -165,7 +165,8 @@ fn make_doc(
         text = read_excel(path);
     } else if ext.as_str() == "pdf" {
         // 如果是PDF类型文件，使用pdf-extract库读取内容
-        text = read_pdf(path);
+        // 2025.12.16 暂时移除对PDF的支持，读取PDF文本会导致索引时间过长
+        // text = read_pdf(path);
     }
     let fname = path
         .file_name()
@@ -270,12 +271,13 @@ fn read_doc(path: &PathBuf) -> String {
 }
 
 /// 读取PDF文档内容
+#[allow(dead_code)]
 fn read_pdf(path: &PathBuf) -> String {       
-    if let Ok(s) = extract_text(path) {
-        s
-    } else {
-        String::new()
+    match std::panic::catch_unwind(|| extract_text(path)) {
+        Ok(Ok(s)) => s,
+        _ => String::new(),
     }
+
 }
 
 pub fn do_rebuild_index(
