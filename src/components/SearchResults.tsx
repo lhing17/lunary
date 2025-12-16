@@ -19,11 +19,12 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   const [menu, setMenu] = useState<{ x: number; y: number; visible: boolean; item?: SearchResult }>(() => ({ x: 0, y: 0, visible: false }));
   useEffect(() => {
     const hide = () => setMenu(m => ({ ...m, visible: false }));
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') hide(); };
     window.addEventListener('click', hide);
-    window.addEventListener('contextmenu', hide);
+    window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('click', hide);
-      window.removeEventListener('contextmenu', hide);
+      window.removeEventListener('keydown', onKey);
     };
   }, []);
   const getFileIcon = (fileType: string) => {
@@ -117,7 +118,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
           onContextMenu={(e) => {
             e.preventDefault();
-            setMenu({ x: e.clientX, y: e.clientY, visible: true, item: result });
+            e.stopPropagation();
+            const mx = Math.min(e.clientX, window.innerWidth - 180);
+            const my = Math.min(e.clientY, window.innerHeight - 100);
+            setMenu({ x: mx, y: my, visible: true, item: result });
           }}
         >
           <div className="flex items-start space-x-4">
