@@ -165,9 +165,7 @@ fn make_doc(
         text = read_excel(path);
     } else if ext.as_str() == "pdf" {
         // 如果是PDF类型文件，使用pdf-extract库读取内容
-        if let Ok(s) = extract_text(path) {
-            text = s;
-        }
+        text = read_pdf(path);
     }
     let fname = path
         .file_name()
@@ -231,7 +229,7 @@ fn read_excel(path: &PathBuf) -> String {
     String::new()
 }
 
-/// 读取WORD文档
+/// 读取WORD文档内容
 fn read_doc(path: &PathBuf) -> String {
     if let Ok(f) = fs::File::open(path) {
         if let Ok(mut zip) = ZipArchive::new(f) {
@@ -269,6 +267,15 @@ fn read_doc(path: &PathBuf) -> String {
         }
     }
     String::new()
+}
+
+/// 读取PDF文档内容
+fn read_pdf(path: &PathBuf) -> String {       
+    if let Ok(s) = extract_text(path) {
+        s
+    } else {
+        String::new()
+    }
 }
 
 pub fn do_rebuild_index(
@@ -432,5 +439,13 @@ mod tests {
         assert!(s.contains("路由器"));
         println!("{}", s);
         let _ = fs::remove_file(&tmp);
+    }
+
+    #[test]
+    fn test_read_pdf() {
+        let path = PathBuf::from("test.pdf");
+        let s = read_pdf(&path);
+        println!("{}", s);
+        let _ = fs::remove_file(&path);
     }
 }
