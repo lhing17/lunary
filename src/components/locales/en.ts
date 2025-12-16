@@ -33,6 +33,7 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     daysAgo: '{days} days ago',
+    revealInFolder: 'Reveal in File Manager',
+    openWithSystem: 'Open with System',
   },
 };
-

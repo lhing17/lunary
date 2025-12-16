@@ -33,6 +33,7 @@ export default {
     today: '今天',
     yesterday: '昨天',
     daysAgo: '{days}天前',
+    revealInFolder: '在文件夹中显示',
+    openWithSystem: '使用系统程序打开',
   },
 };
-

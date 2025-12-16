@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText, Calendar, Folder, ExternalLink } from 'lucide-react';
 import { SearchResult } from '../types';
 import { useI18n } from '../i18n';
+import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -15,6 +16,16 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   query 
 }) => {
   const { t, locale } = useI18n();
+  const [menu, setMenu] = useState<{ x: number; y: number; visible: boolean; item?: SearchResult }>(() => ({ x: 0, y: 0, visible: false }));
+  useEffect(() => {
+    const hide = () => setMenu(m => ({ ...m, visible: false }));
+    window.addEventListener('click', hide);
+    window.addEventListener('contextmenu', hide);
+    return () => {
+      window.removeEventListener('click', hide);
+      window.removeEventListener('contextmenu', hide);
+    };
+  }, []);
   const getFileIcon = (fileType: string) => {
     switch (fileType.toLowerCase()) {
       case 'txt':
@@ -104,9 +115,9 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         <div
           key={result.id}
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => {
-            // TODO: Open file with Tauri command
-            console.log('Open file:', result.filePath);
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setMenu({ x: e.clientX, y: e.clientY, visible: true, item: result });
           }}
         >
           <div className="flex items-start space-x-4">
@@ -126,7 +137,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {(result.score * 100).toFixed(0)}%
                   </span>
-                  <ExternalLink className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                  <ExternalLink 
+                    className="w-4 h-4 text-gray-400 hover:text-gray-600"
+                    onClick={() => openPath(result.filePath)}
+                  />
                 </div>
               </div>
               
@@ -165,6 +179,31 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           </div>
         </div>
       ))}
+      {menu.visible && menu.item && (
+        <div 
+          className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg"
+          style={{ left: menu.x, top: menu.y }}
+        >
+          <button 
+            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+            onClick={() => {
+              if (menu.item) revealItemInDir(menu.item.filePath);
+              setMenu(m => ({ ...m, visible: false }));
+            }}
+          >
+            {t('components.searchResults.revealInFolder')}
+          </button>
+          <button 
+            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+            onClick={() => {
+              if (menu.item) openPath(menu.item.filePath);
+              setMenu(m => ({ ...m, visible: false }));
+            }}
+          >
+            {t('components.searchResults.openWithSystem')}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
