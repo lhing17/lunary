@@ -115,7 +115,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       {results.map((result) => (
         <div
           key={result.id}
-          className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+          className="group relative bg-surface-light dark:bg-surface-dark backdrop-blur-sm rounded-2xl border border-white/20 dark:border-white/5 p-6 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer"
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -124,56 +124,60 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             setMenu({ x: mx, y: my, visible: true, item: result });
           }}
         >
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0 mt-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
+          <div className="flex items-start space-x-4 relative z-10">
+            <div className="flex-shrink-0 mt-1 p-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
               {getFileIcon(result.fileType)}
             </div>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-2">
                 <h3 
-                  className="text-lg font-medium text-gray-900 dark:text-white truncate"
+                  className="text-lg font-medium text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
                   dangerouslySetInnerHTML={{
                     __html: highlightText(result.title, query)
                   }}
                 />
                 <div className="flex items-center space-x-2 ml-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                     {(result.score * 100).toFixed(0)}%
                   </span>
                   <ExternalLink 
-                    className="w-4 h-4 text-gray-400 hover:text-gray-600"
-                    onClick={() => openPath(result.filePath)}
+                    className="w-4 h-4 text-gray-400 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        openPath(result.filePath);
+                    }}
                   />
                 </div>
               </div>
               
               <p 
-                className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-2"
+                className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-2 text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: highlightText(result.content, query)
                 }}
               />
               
-              <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <Folder className="w-4 h-4" />
-                  <span className="truncate max-w-xs">
+              <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center space-x-1.5">
+                  <Folder className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-xs font-mono opacity-80">
                     {result.filePath}
                   </span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Calendar className="w-4 h-4" />
+                <div className="flex items-center space-x-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
                   <span>{formatDate(result.modifiedTime)}</span>
                 </div>
               </div>
               
               {result.highlights && result.highlights.length > 0 && (
-                <div className="mt-3 space-y-1">
+                <div className="mt-4 space-y-2">
                   {result.highlights.slice(0, 2).map((highlight, index) => (
                     <div 
                       key={index}
-                      className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded px-2 py-1"
+                      className="text-sm text-gray-600 dark:text-gray-300 bg-primary-50/50 dark:bg-primary-900/20 border-l-2 border-primary-300 dark:border-primary-700 pl-3 py-1 italic"
                       dangerouslySetInnerHTML={{ __html: highlight }}
                     />
                   ))}

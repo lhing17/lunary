@@ -14,7 +14,7 @@ export const SearchPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [searchTime, setSearchTime] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,54 +74,60 @@ export const SearchPage: React.FC = () => {
   }, [filters, currentPage, perPage]);
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+    <div className="h-full flex flex-col">
+      {/* Hero Header */}
+      <div className="relative z-10 flex-shrink-0 pt-8 pb-6 px-6 lg:px-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            {t("pages.searchPage.title")}
-          </h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+              {t("pages.searchPage.title")}
+            </h1>
+            {/* Optional: Add some top-right actions or keep it clean */}
+          </div>
 
-          {/* Search Input */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isSearching) {
-                  e.preventDefault();
-                  performSearch(query);
-                }
-              }}
-              placeholder={t("pages.searchPage.placeholder")}
-              className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-1 rounded-md transition-colors ${
-                  showFilters
-                    ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
-                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                }`}
-              >
-                <Filter className="h-5 w-5" />
-              </button>
+          {/* Search Input Container */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-300 to-primary-500 rounded-full opacity-30 group-hover:opacity-60 transition duration-500 blur"></div>
+            <div className="relative flex items-center bg-surface-light dark:bg-surface-dark backdrop-blur-xl rounded-full shadow-lg border border-white/20 dark:border-white/10">
+              <div className="pl-5 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isSearching) {
+                    e.preventDefault();
+                    performSearch(query);
+                  }
+                }}
+                placeholder={t("pages.searchPage.placeholder")}
+                className="block w-full pl-3 pr-14 py-4 bg-transparent border-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 focus:outline-none text-lg"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 hidden">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-full transition-all duration-200 ${
+                    showFilters
+                      ? "text-primary-600 dark:text-primary-300 bg-primary-100 dark:bg-primary-900/30"
+                      : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <Filter className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative z-0">
         {/* Left Sidebar - Search History & Filters */}
         <div
           className={`${
-            showFilters ? "w-80" : "w-0"
-          } transition-all duration-300 overflow-hidden bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700`}
+            showFilters ? "w-300 opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-4"
+          } transition-all duration-300 ease-in-out overflow-hidden bg-surface-light/50 dark:bg-surface-dark/50 backdrop-blur-md border-r border-white/20 dark:border-white/5 ml-4 my-4 rounded-2xl shadow-sm md:block`}
         >
           <div className="p-4 h-full overflow-y-auto">
             {showFilters && (

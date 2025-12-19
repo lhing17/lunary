@@ -7,9 +7,9 @@ import { Sidebar } from './components/Sidebar';
 function App() {
   return (
     <Router>
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Sidebar />
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden relative">
           <Routes>
             <Route path="/" element={<SearchPage />} />
             <Route path="/index-management" element={<IndexManagementPage />} />
