@@ -1,0 +1,13 @@
+menu:
+  app:
+    name: "Lunary"
+    about: "关于 Lunary"
+    services: "服务"
+    hide: "隐藏 Lunary"
+    hide_others: "隐藏其他"
+    show_all: "显示全部"
+    quit: "退出 Lunary"
+  file:
+    name: "文件"
+    open: "打开"
+    close_window: "关闭窗口"

@@ -4,8 +4,13 @@ mod types;
 use std::error::Error;
 
 use crate::types::{DirectoryConfigCmd, SearchFiltersCmd, SearchResponsePayload};
-use tauri::menu::{ AboutMetadataBuilder, Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::menu::{AboutMetadataBuilder, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::Manager;
+use rust_i18n::t;
+
+
+// 初始化 i18n
+rust_i18n::i18n!("locales", fallback = "zh-CN");
 
 /// 搜索索引: 基于已有索引返回匹配文档
 #[tauri::command]
@@ -30,63 +35,18 @@ fn rebuild_index(
 
 #[tauri::command]
 fn update_menu(app: tauri::AppHandle, lang: String) -> Result<(), String> {
-    let menu = create_menu(&app, &lang).map_err(|e| e.to_string())?;
+    rust_i18n::set_locale(&lang);
+    let menu = create_menu(&app).map_err(|e| e.to_string())?;
     app.set_menu(menu).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 fn create_menu<R: tauri::Runtime>(
     app: &impl tauri::Manager<R>,
-    lang: &str,
 ) -> Result<Menu<R>, Box<dyn Error>> {
-    // ========================
-    // 1. App 菜单（macOS 必须）
-    // ========================
-
-    let is_zh = lang == "zh-CN";
-
-    let (
-        app_menu_text,
-        about_text,
-        services_text,
-        hide_text,
-        hide_others_text,
-        show_all_text,
-        quit_text,
-        file_menu_text,
-        open_text,
-        close_window_text,
-    ) = if is_zh {
-        (
-            "Lunary",
-            "关于 Lunary",
-            "服务",
-            "隐藏 Lunary",
-            "隐藏其他",
-            "显示全部",
-            "退出 Lunary",
-            "文件",
-            "打开",
-            "关闭窗口",
-        )
-    } else {
-        (
-            "Lunary",
-            "About Lunary",
-            "Services",
-            "Hide Lunary",
-            "Hide Others",
-            "Show All",
-            "Quit Lunary",
-            "File",
-            "Open",
-            "Close Window",
-        )
-    };
-
     let about = PredefinedMenuItem::about(
         app,
-        Some(about_text),
+        Some(&t!("menu.app.about").to_string()),
         Some(
             AboutMetadataBuilder::new()
                 .version(Some("1.0.0"))
@@ -97,14 +57,14 @@ fn create_menu<R: tauri::Runtime>(
         ),
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let services = PredefinedMenuItem::services(app, Some(services_text))?;
-    let hide = PredefinedMenuItem::hide(app, Some(hide_text))?;
-    let hide_others = PredefinedMenuItem::hide_others(app, Some(hide_others_text))?;
-    let show_all = PredefinedMenuItem::show_all(app, Some(show_all_text))?;
-    let quit = PredefinedMenuItem::quit(app, Some(quit_text))?;
+    let services = PredefinedMenuItem::services(app, Some(&t!("menu.app.services").to_string()))?;
+    let hide = PredefinedMenuItem::hide(app, Some(&t!("menu.app.hide").to_string()))?;
+    let hide_others = PredefinedMenuItem::hide_others(app, Some(&t!("menu.app.hide_others").to_string()))?;
+    let show_all = PredefinedMenuItem::show_all(app, Some(&t!("menu.app.show_all").to_string()))?;
+    let quit = PredefinedMenuItem::quit(app, Some(&t!("menu.app.quit").to_string()))?;
     let app_menu = Submenu::with_items(
         app,
-        app_menu_text,
+        t!("menu.app.name").to_string(),
         true,
         &[
             &about,
@@ -122,12 +82,12 @@ fn create_menu<R: tauri::Runtime>(
     // ========================
     // 2. 文件菜单
     // ========================
-    let open_item = MenuItem::with_id(app, "open", open_text, true, Some("Cmd+O"))?;
-    let close_window_item = PredefinedMenuItem::close_window(app, Some(close_window_text))?;
+    let open_item = MenuItem::with_id(app, "open", &t!("menu.file.open").to_string(), true, Some("Cmd+O"))?;
+    let close_window_item = PredefinedMenuItem::close_window(app, Some(&t!("menu.file.close_window").to_string()))?;
 
     let file_menu = Submenu::with_items(
         app,
-        file_menu_text,
+        t!("menu.file.name").to_string(),
         true,
         &[
             &open_item,
@@ -160,7 +120,8 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let menu = create_menu(app, &lang)?;
+    rust_i18n::set_locale(&lang);
+    let menu = create_menu(app)?;
     app.set_menu(menu)?;
 
     Ok(())
