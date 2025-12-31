@@ -3,6 +3,7 @@ import { Save, RotateCcw, Palette, Search, Database } from 'lucide-react';
 import { AppSettings } from '../types';
 import { useI18n } from '../i18n';
 import { saveSettings, loadSettings } from '../utils/settingsStorage';
+import { invoke } from '@tauri-apps/api/core';
 
 export const SettingsPage: React.FC = () => {
   const { t, lang, setLang, locale } = useI18n();
@@ -288,6 +289,7 @@ export const SettingsPage: React.FC = () => {
                   onChange={(e) => {
                     handleSettingChange('ui', 'language', e.target.value);
                     setLang(e.target.value as any);
+                    invoke('update_menu', { lang: e.target.value });
                   }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
