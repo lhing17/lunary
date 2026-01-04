@@ -26,25 +26,24 @@ export const SettingsPage: React.FC = () => {
     },
   });
 
-  const [hasChanges, setHasChanges] = useState(false);
   const [showExcludeInput, setShowExcludeInput] = useState(false);
   const [newExcludePattern, setNewExcludePattern] = useState('');
 
-  const handleSettingChange = (section: keyof AppSettings, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [key]: value,
-      },
-    }));
-    setHasChanges(true);
-  };
-
-  const handleSaveSettings = async () => {
-    // 持久化保存设置
-    await saveSettings(settings);
-    setHasChanges(false);
+  const handleSettingChange = async (section: keyof AppSettings, key: string, value: any) => {
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [key]: value,
+        },
+      };
+      
+      // 持久化保存设置
+      saveSettings(newSettings);
+      
+      return newSettings;
+    });
   };
 
   const handleResetSettings = () => {
@@ -66,7 +65,8 @@ export const SettingsPage: React.FC = () => {
         showThumbnails: true,
       },
     });
-    setHasChanges(true);
+    setLang('zh-CN');
+    invoke('update_menu', { lang: 'zh-CN' });
   };
 
   const handleAddExcludePattern = () => {
@@ -321,14 +321,6 @@ export const SettingsPage: React.FC = () => {
             {t('pages.settings.reset')}
           </button>
           
-          <button
-            onClick={handleSaveSettings}
-            disabled={!hasChanges}
-            className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Save className="w-4 h-4 inline mr-2" />
-            {t('pages.settings.save')}
-          </button>
         </div>
 
         {/* About Section */}
