@@ -168,7 +168,7 @@ export const IndexManagementPage: React.FC = () => {
               <button
                 onClick={handleRebuildIndex}
                 disabled={indexStatus.isIndexing}
-                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-primary-600 dark:text-white border border-primary-600 rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {t('pages.indexManagement.rebuild')}
               </button>
@@ -183,7 +183,7 @@ export const IndexManagementPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('pages.indexManagement.directories')}</h2>
               <button
                 onClick={handleAddDirectory}
-                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 dark:text-white border border-primary-600 rounded-md hover:bg-primary-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>{t('pages.indexManagement.addDir')}</span>
@@ -197,12 +197,6 @@ export const IndexManagementPage: React.FC = () => {
                 <Folder className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('pages.indexManagement.emptyTitle')}</h3>
                 <p className="text-gray-500 dark:text-gray-400 mb-4">{t('pages.indexManagement.emptyDesc')}</p>
-                <button
-                  onClick={handleAddDirectory}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  {t('pages.indexManagement.addDir')}
-                </button>
               </div>
             ) : (
               directories.map((directory, index) => (
