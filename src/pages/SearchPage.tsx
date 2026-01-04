@@ -126,8 +126,8 @@ export const SearchPage: React.FC = () => {
         {/* Left Sidebar - Search History & Filters */}
         <div
           className={`${
-            showFilters ? "w-300 opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-4"
-          } transition-all duration-300 ease-in-out overflow-hidden bg-surface-light/50 dark:bg-surface-dark/50 backdrop-blur-md border-r border-white/20 dark:border-white/5 ml-4 my-4 rounded-2xl shadow-sm md:block`}
+            showFilters ? "w-[300px] opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-4"
+          } transition-all duration-300 ease-in-out overflow-hidden bg-surface-light/50 dark:bg-surface-dark/50 backdrop-blur-md border-r border-white/20 dark:border-white/5 ml-4 my-4 rounded-2xl shadow-sm md:block flex-shrink-0`}
         >
           <div className="p-4 h-full overflow-y-auto">
             {showFilters && (
