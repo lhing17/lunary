@@ -58,13 +58,33 @@ fn create_menu<R: tauri::Runtime>(
         ),
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let services = PredefinedMenuItem::services(app, Some(&t!("menu.app.services").to_string()))?;
-    let hide = PredefinedMenuItem::hide(app, Some(&t!("menu.app.hide").to_string()))?;
-    let hide_others = PredefinedMenuItem::hide_others(app, Some(&t!("menu.app.hide_others").to_string()))?;
-    let show_all = PredefinedMenuItem::show_all(app, Some(&t!("menu.app.show_all").to_string()))?;
+    #[cfg(target_os = "macos")]
+    let services = PredefinedMenuItem::services(
+        app,
+        Some(&t!("menu.app.services").to_string()),
+    )?;
+
+    #[cfg(target_os = "macos")]
+    let hide = PredefinedMenuItem::hide(
+        app,
+        Some(&t!("menu.app.hide").to_string()),
+    )?;
+
+    #[cfg(target_os = "macos")]
+    let hide_others = PredefinedMenuItem::hide_others(
+        app,
+        Some(&t!("menu.app.hide_others").to_string()),
+    )?;
+
+    #[cfg(target_os = "macos")]
+    let show_all = PredefinedMenuItem::show_all(
+        app,
+        Some(&t!("menu.app.show_all").to_string()),
+    )?;
     let quit = PredefinedMenuItem::quit(app, Some(&t!("menu.app.quit").to_string()))?;
     let settings = MenuItem::with_id(app, "settings", &t!("menu.app.settings").to_string(), true, None::<&str>)?;
     
+    #[cfg(target_os = "macos")]
     let app_menu = Submenu::with_items(
         app,
         t!("menu.app.name").to_string(),
@@ -84,22 +104,36 @@ fn create_menu<R: tauri::Runtime>(
         ],
     )?;
 
-    // ========================
-    // 2. 文件菜单
-    // ========================
-    let open_item = MenuItem::with_id(app, "open", &t!("menu.file.open").to_string(), true, Some("Cmd+O"))?;
-    let close_window_item = PredefinedMenuItem::close_window(app, Some(&t!("menu.file.close_window").to_string()))?;
-
-    let file_menu = Submenu::with_items(
+    #[cfg(not(target_os = "macos"))]
+    let app_menu = Submenu::with_items(
         app,
-        t!("menu.file.name").to_string(),
+        t!("menu.app.name").to_string(),
         true,
         &[
-            &open_item,
+            &about,
             &separator,
-            &close_window_item,
+            &settings,
+            &separator,
+            &quit,
         ],
     )?;
+
+    // ========================
+    // 2. 文件菜单--暂时没用
+    // ========================
+    // let open_item = MenuItem::with_id(app, "open", &t!("menu.file.open").to_string(), true, Some("Cmd+O"))?;
+    // let close_window_item = PredefinedMenuItem::close_window(app, Some(&t!("menu.file.close_window").to_string()))?;
+
+    // let file_menu = Submenu::with_items(
+    //     app,
+    //     t!("menu.file.name").to_string(),
+    //     true,
+    //     &[
+    //         &open_item,
+    //         &separator,
+    //         &close_window_item,
+    //     ],
+    // )?;
 
     // ========================
     // 3. 工具菜单
@@ -124,7 +158,7 @@ fn create_menu<R: tauri::Runtime>(
     // ========================
     // 4. 顶层菜单
     // ========================
-    let menu = Menu::with_items(app, &[&app_menu, &file_menu, &tools_menu])?;
+    let menu = Menu::with_items(app, &[&app_menu, &tools_menu])?;
     Ok(menu)
 }
 
