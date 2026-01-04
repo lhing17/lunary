@@ -7,7 +7,11 @@ menu:
     hide_others: "隐藏其他"
     show_all: "显示全部"
     quit: "退出 Lunary"
+    settings: "设置..."
   file:
     name: "文件"
     open: "打开"
     close_window: "关闭窗口"
+  tools:
+    name: "工具"
+    index_management: "索引管理..."

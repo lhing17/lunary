@@ -7,6 +7,7 @@ use crate::types::{DirectoryConfigCmd, SearchFiltersCmd, SearchResponsePayload};
 use tauri::menu::{AboutMetadataBuilder, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::Manager;
 use rust_i18n::t;
+use tauri::Emitter;
 
 
 // 初始化 i18n
@@ -62,12 +63,16 @@ fn create_menu<R: tauri::Runtime>(
     let hide_others = PredefinedMenuItem::hide_others(app, Some(&t!("menu.app.hide_others").to_string()))?;
     let show_all = PredefinedMenuItem::show_all(app, Some(&t!("menu.app.show_all").to_string()))?;
     let quit = PredefinedMenuItem::quit(app, Some(&t!("menu.app.quit").to_string()))?;
+    let settings = MenuItem::with_id(app, "settings", &t!("menu.app.settings").to_string(), true, None::<&str>)?;
+    
     let app_menu = Submenu::with_items(
         app,
         t!("menu.app.name").to_string(),
         true,
         &[
             &about,
+            &separator,
+            &settings,
             &separator,
             &services,
             &separator,
@@ -97,9 +102,29 @@ fn create_menu<R: tauri::Runtime>(
     )?;
 
     // ========================
-    // 3. 顶层菜单
+    // 3. 工具菜单
     // ========================
-    let menu = Menu::with_items(app, &[&app_menu, &file_menu])?;
+    let index_management_item = MenuItem::with_id(
+        app,
+        "index_management",
+        &t!("menu.tools.index_management").to_string(),
+        true,
+        None::<&str>,
+    )?;
+
+    let tools_menu = Submenu::with_items(
+        app,
+        t!("menu.tools.name").to_string(),
+        true,
+        &[
+            &index_management_item,
+        ],
+    )?;
+
+    // ========================
+    // 4. 顶层菜单
+    // ========================
+    let menu = Menu::with_items(app, &[&app_menu, &file_menu, &tools_menu])?;
     Ok(menu)
 }
 
@@ -123,6 +148,13 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn Error>> {
     rust_i18n::set_locale(&lang);
     let menu = create_menu(app)?;
     app.set_menu(menu)?;
+
+    app.on_menu_event(move |app, event| {
+        let id = event.id.as_ref();
+        if id == "settings" || id == "index_management" {
+             let _ = app.emit("menu://menu/click", id);
+        }
+    });
 
     Ok(())
 }
