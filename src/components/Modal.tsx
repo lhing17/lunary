@@ -36,7 +36,6 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
       {/* Overlay/Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
         aria-hidden="true"
       />
       
