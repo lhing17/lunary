@@ -6,10 +6,14 @@ import { SettingsPage } from './pages/SettingsPage';
 import { Modal } from './components/Modal';
 import { loadSettings } from './utils/settingsStorage';
 import { useI18n } from './i18n';
+import { useTheme } from './hooks/useTheme';
 import { listen } from '@tauri-apps/api/event';
 
 function App() {
   const { t, setLang } = useI18n();
+  // Initialize theme
+  useTheme();
+  
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isIndexManagerOpen, setIsIndexManagerOpen] = useState(false);
 

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Save, RotateCcw, Palette, Search, Database } from 'lucide-react';
 import { AppSettings } from '../types';
 import { useI18n } from '../i18n';
+import { useTheme } from '../hooks/useTheme';
 import { saveSettings, loadSettings } from '../utils/settingsStorage';
 import { invoke } from '@tauri-apps/api/core';
 
 export const SettingsPage: React.FC = () => {
   const { t, lang, setLang, locale } = useI18n();
+  const { setTheme } = useTheme();
   const [settings, setSettings] = useState<AppSettings>({
     search: {
       resultsPerPage: 20,
@@ -30,6 +32,11 @@ export const SettingsPage: React.FC = () => {
   const [newExcludePattern, setNewExcludePattern] = useState('');
 
   const handleSettingChange = async (section: keyof AppSettings, key: string, value: any) => {
+    // If theme is changed, update it immediately using useTheme hook
+    if (section === 'ui' && key === 'theme') {
+      setTheme(value);
+    }
+
     setSettings(prev => {
       const newSettings = {
         ...prev,

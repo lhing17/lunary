@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'media', // Use system preference or 'class' if manual toggling is implemented
+  darkMode: 'class', 
   theme: {
     extend: {
       colors: {
